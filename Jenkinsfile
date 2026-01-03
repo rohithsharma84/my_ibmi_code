@@ -4,6 +4,8 @@ pipeline {
     environment {
         IBM_I_HOST = 'pub400.com'
         IBM_I_USER = 'RSHARMA'
+        SSH_PORT   = '2222'
+        SSH_OPTS   = '-o StrictHostKeyChecking=no'
     }
 
     stages {
@@ -40,11 +42,11 @@ pipeline {
             steps {
                 sshagent(credentials: ['ibmi-ssh']) {
                     sh """
-                    ssh ${IBM_I_USER}@${IBM_I_HOST} "
+                    ssh -p ${SSH_PORT} ${SSH_OPTS} ${IBM_I_USER}@${IBM_I_HOST} "
                     rm -rf /home/${IBM_I_USER}/repo &&
                     mkdir -p /home/${IBM_I_USER}/repo
                     "
-                    scp -r * ${IBM_I_USER}@${IBM_I_HOST}:/home/${IBM_I_USER}/repo
+                    scp -P ${SSH_PORT} -r * ${IBM_I_USER}@${IBM_I_HOST}:/home/${IBM_I_USER}/repo
                     """
                 }
             }
@@ -54,7 +56,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['ibmi-ssh']) {
                     sh """
-                    ssh ${IBM_I_USER}@${IBM_I_HOST} "
+                    ssh -p ${SSH_PORT} ${SSH_OPTS} ${IBM_I_USER}@${IBM_I_HOST} "
                     for f in rpg/*.rpgle; do
                       PGM=\$(basename \$f .rpgle)
                       CRTBNDRPG PGM(${TARGET_LIB}/\$PGM) SRCSTMF('/home/${IBM_I_USER}/repo/\$f')
@@ -69,7 +71,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['ibmi-ssh']) {
                     sh """
-                    ssh ${IBM_I_USER}@${IBM_I_HOST} "
+                    ssh -p ${SSH_PORT} ${SSH_OPTS} ${IBM_I_USER}@${IBM_I_HOST} "
                     for f in cl/*.clle; do
                       PGM=\$(basename \$f .clle)
                       CRTCLPGM PGM(${TARGET_LIB}/\$PGM) SRCSTMF('/home/${IBM_I_USER}/repo/\$f')
@@ -84,7 +86,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['ibmi-ssh']) {
                     sh """
-                    ssh ${IBM_I_USER}@${IBM_I_HOST} "
+                    ssh -p ${SSH_PORT} ${SSH_OPTS} ${IBM_I_USER}@${IBM_I_HOST} "
                     for f in db/*.sql; do
                       RUNSQLSTM SRCSTMF('/home/${IBM_I_USER}/repo/\$f')
                     done
