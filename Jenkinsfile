@@ -36,6 +36,20 @@ pipeline {
             }
         }
 
+        stage('Sync Source to IBM i') {
+            steps {
+                sshagent(credentials: ['ibmi-ssh']) {
+                    sh """
+                    ssh ${IBM_I_USER}@${IBM_I_HOST} "
+                    rm -rf /home/${IBM_I_USER}/repo &&
+                    mkdir -p /home/${IBM_I_USER}/repo
+                    "
+                    scp -r * ${IBM_I_USER}@${IBM_I_HOST}:/home/${IBM_I_USER}/repo
+                    """
+                }
+            }
+        }
+        
         stage('Compile RPG') {
             steps {
                 sshagent(credentials: ['ibmi-ssh']) {
