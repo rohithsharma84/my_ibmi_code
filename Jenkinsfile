@@ -54,14 +54,16 @@ pipeline {
         
         stage('Compile RPG') {
             steps {
-                sshagent(credentials: ['ibmi-ssh']) {
-                    sh """
-                    ssh -p ${SSH_PORT} ${SSH_OPTS} ${IBM_I_USER}@${IBM_I_HOST} "
-                    for f in rpg/*.rpgle; do
-                      PGM=\$(basename \$f .rpgle)
-                      CRTBNDRPG PGM(${TARGET_LIB}/\$PGM) SRCSTMF('/home/${IBM_I_USER}/repo/\$f')
-                    done
-                    "
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ibmi-ssh-key',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
+                    bat """
+                    for %%f in (rpg\\*.rpgle) do (
+                      ssh -i %SSH_KEY% -p 2222 %SSH_USER%@pub400.com ^
+                      "system 'CRTBNDRPG PGM(${TARGET_LIB}/%%~nf) SRCSTMF(\\'/home/RSHARMA/jenkins/%%~nxf\\') DBGVIEW(*SOURCE)'"
+                    )
                     """
                 }
             }
@@ -69,14 +71,16 @@ pipeline {
 
         stage('Compile CL') {
             steps {
-                sshagent(credentials: ['ibmi-ssh']) {
-                    sh """
-                    ssh -p ${SSH_PORT} ${SSH_OPTS} ${IBM_I_USER}@${IBM_I_HOST} "
-                    for f in cl/*.clle; do
-                      PGM=\$(basename \$f .clle)
-                      CRTCLPGM PGM(${TARGET_LIB}/\$PGM) SRCSTMF('/home/${IBM_I_USER}/repo/\$f')
-                    done
-                    "
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ibmi-ssh-key',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
+                    bat """
+                    for %%f in (cl\\*.clle) do (
+                      ssh -i %SSH_KEY% -p 2222 %SSH_USER%@pub400.com ^
+                      "system 'CRTBNDCL PGM(${TARGET_LIB}/%%~nf) SRCSTMF(\\'/home/RSHARMA/jenkins/%%~nxf\\')'"
+                    )
                     """
                 }
             }
@@ -84,18 +88,20 @@ pipeline {
 
         stage('Deploy DB Changes') {
             steps {
-                sshagent(credentials: ['ibmi-ssh']) {
-                    sh """
-                    ssh -p ${SSH_PORT} ${SSH_OPTS} ${IBM_I_USER}@${IBM_I_HOST} "
-                    for f in db/*.sql; do
-                      RUNSQLSTM SRCSTMF('/home/${IBM_I_USER}/repo/\$f')
-                    done
-                    "
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ibmi-ssh-key',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
+                    bat """
+                    for %%f in (db\\*.sql) do (
+                      ssh -i %SSH_KEY% -p 2222 %SSH_USER%@pub400.com ^
+                      "system 'RUNSQLSTM SRCSTMF(\\'/home/RSHARMA/jenkins/%%~nxf\\') COMMIT(*NONE)'"
+                    )
                     """
                 }
             }
         }
-    }
 
     post {
         success {
