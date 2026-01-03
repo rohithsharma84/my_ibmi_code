@@ -2,68 +2,38 @@ pipeline {
     agent any
 
     environment {
-        IBM_I_HOST = 'pub400.com'
-        IBM_I_USER = 'RSHARMA'
-        SSH_PORT   = '2222'
-        SSH_OPTS   = '-o StrictHostKeyChecking=no'
+        IBM_I_HOST = 'PUB400.com'
+        IBM_I_USER = 'MYUSER'
+        IBM_I_PORT = '2222'
     }
 
     stages {
-
-        stage('Select Environment') {
-            steps {
-                script {
-                    if (env.BRANCH_NAME.startsWith('feature/')) {
-                        env.TARGET_LIB = 'RSHARMA1'
-                        env.ENV_NAME   = 'DEV'
-                    } else if (env.BRANCH_NAME == 'develop') {
-                        env.TARGET_LIB = 'RSHARMAB'
-                        env.ENV_NAME   = 'QA'
-                    } else if (env.BRANCH_NAME == 'main') {
-                        env.TARGET_LIB = 'RSHARMA2'
-                        env.ENV_NAME   = 'PROD'
-                    } else {
-                        error "Unsupported branch: ${env.BRANCH_NAME}"
-                    }
-                }
-            }
-        }
-
-        stage('Confirm Production Deploy') {
-            when {
-                branch 'main'
-            }
-            steps {
-                input message: "Deploy to PROD library ${env.TARGET_LIB}?"
-            }
-        }
-
         stage('Sync Source to IBM i') {
             steps {
-                sshagent(credentials: ['ibmi-ssh']) {
+                sshUserPrivateKey(
+                    credentialsId: 'RSHARMA',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                ) {
                     sh """
-                    ssh -p ${SSH_PORT} ${SSH_OPTS} ${IBM_I_USER}@${IBM_I_HOST} "
-                    rm -rf /home/${IBM_I_USER}/repo &&
-                    mkdir -p /home/${IBM_I_USER}/repo
-                    "
-                    scp -P ${SSH_PORT} -r * ${IBM_I_USER}@${IBM_I_HOST}:/home/${IBM_I_USER}/repo
+                        echo "Syncing source to IBM i..."
+                        scp -P $IBM_I_PORT ./local_source/* $SSH_USER@$IBM_I_HOST:/QSYS.LIB/MYLIB.LIB/
                     """
                 }
             }
         }
-        
+
         stage('Compile RPG') {
             steps {
-                withCredentials([sshUserPrivateKey(
-                    credentialsId: 'ibmi-ssh-key',
+                sshUserPrivateKey(
+                    credentialsId: 'RSHARMA',
                     keyFileVariable: 'SSH_KEY',
                     usernameVariable: 'SSH_USER'
-                )]) {
-                    bat """
-                    for %%f in (rpg\\*.rpgle) do (
-                      ssh -i %SSH_KEY% -p 2222 %SSH_USER%@pub400.com ^
-                      "system 'CRTBNDRPG PGM(${TARGET_LIB}/%%~nf) SRCSTMF(\\'/home/RSHARMA/jenkins/%%~nxf\\') DBGVIEW(*SOURCE)'"
-                    )
+                ) {
+                    sh """
+                        echo "Compiling RPG..."
+                        ssh -i $SSH_KEY -p $IBM_I_PORT $SSH_USER@$IBM_I_HOST 'CRTRPGMOD MODULE(MYLIB/MYMOD) SRCSTMF("/QSYS.LIB/MYLIB.LIB/HELLO.RPGLE")'
+                        ssh -i $SSH_KEY -p $IBM_I_PORT $SSH_USER@$IBM_I_HOST 'CRTPGM PGM(MYLIB/MYPGM) MODULE(MYLIB/MYMOD)'
                     """
                 }
             }
@@ -71,16 +41,14 @@ pipeline {
 
         stage('Compile CL') {
             steps {
-                withCredentials([sshUserPrivateKey(
-                    credentialsId: 'ibmi-ssh-key',
+                sshUserPrivateKey(
+                    credentialsId: 'RSHARMA',
                     keyFileVariable: 'SSH_KEY',
                     usernameVariable: 'SSH_USER'
-                )]) {
-                    bat """
-                    for %%f in (cl\\*.clle) do (
-                      ssh -i %SSH_KEY% -p 2222 %SSH_USER%@pub400.com ^
-                      "system 'CRTBNDCL PGM(${TARGET_LIB}/%%~nf) SRCSTMF(\\'/home/RSHARMA/jenkins/%%~nxf\\')'"
-                    )
+                ) {
+                    sh """
+                        echo "Compiling CL..."
+                        ssh -i $SSH_KEY -p $IBM_I_PORT $SSH_USER@$IBM_I_HOST 'CRTBNDCL PGM(MYLIB/MYCLPGM) SRCSTMF("/QSYS.LIB/MYLIB.LIB/HELLO.CLLE")'
                     """
                 }
             }
@@ -88,28 +56,26 @@ pipeline {
 
         stage('Deploy DB Changes') {
             steps {
-                withCredentials([sshUserPrivateKey(
-                    credentialsId: 'ibmi-ssh-key',
+                sshUserPrivateKey(
+                    credentialsId: 'RSHARMA',
                     keyFileVariable: 'SSH_KEY',
                     usernameVariable: 'SSH_USER'
-                )]) {
-                    bat """
-                    for %%f in (db\\*.sql) do (
-                      ssh -i %SSH_KEY% -p 2222 %SSH_USER%@pub400.com ^
-                      "system 'RUNSQLSTM SRCSTMF(\\'/home/RSHARMA/jenkins/%%~nxf\\') COMMIT(*NONE)'"
-                    )
+                ) {
+                    sh """
+                        echo "Deploying DB changes..."
+                        ssh -i $SSH_KEY -p $IBM_I_PORT $SSH_USER@$IBM_I_HOST 'RUNSQL SQL("ALTER TABLE MYLIB/MYTABLE ADD COLUMN NEWCOL INT")'
                     """
                 }
             }
         }
-    }
-    
+    } // <-- CLOSE stages
+
     post {
         success {
-            echo "Deployment to ${ENV_NAME} (${TARGET_LIB}) completed successfully."
+            echo 'Deployment succeeded!'
         }
         failure {
-            echo "Deployment failed."
+            echo 'Deployment failed.'
         }
     }
-}
+} // <-- CLOSE pipeline
