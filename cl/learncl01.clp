@@ -8,6 +8,7 @@ START:      PGM PARM(&NAME)
             DCL &NAME *CHAR LEN(20)
             DCL &MSG *CHAR LEN(80)
 
+        /* Send a message to the pgm msg queue */
             CHGVAR &MSG VALUE('Hi' |> &NAME |< '! Welcome to Learning CL!')
             SNDPGMMSG MSGDTA(&MSG) MSGID(CPF9898) MSGF(QCPFMSG) MSGTYPE(*INFO)
 
