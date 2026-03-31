@@ -32,7 +32,7 @@ pipeline {
                             
                             # 3. Push workspace (source + Makefile) to IFS and compile
                             # We use gmake on pub400 to execute the build into RSHARMA1
-                            ici --host ${IBMI_HOST} --port ${IBMI_SSH_PORT} \ 
+                            ici --host ${IBMI_HOST} --port ${IBMI_SSH_PORT} \
                                 --user ${IBMI_USER} --password ${IBMI_PASSWORD} \
                                 --push . \
                                 --rcwd ${REMOTE_PATH} \
