@@ -32,9 +32,7 @@ pipeline {
                             
                             # 3. Push workspace (source + Makefile) to IFS and compile
                             # We use gmake on pub400 to execute the build into RSHARMA1
-                            ici --host ${IBMI_HOST} --port ${IBMI_SSH_PORT} \
-                                --user ${IBMI_USER} --password ${IBMI_PASSWORD} \
-                                --push . \
+                            ici --push . \
                                 --rcwd ${REMOTE_PATH} \
                                 --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
                         """
@@ -51,9 +49,7 @@ pipeline {
                         
                         // Moves all successfully compiled objects to the production library
                         sh """
-                            ici --host ${IBMI_HOST} --port ${IBMI_SSH_PORT} \
-                                --user ${IBMI_USER} --password ${IBMI_PASSWORD} \
-                                --cmd "MOVOBJ OBJ(${BUILD_LIB}/*ALL) OBJTYPE(*ALL) TOLIB(${DEPLOY_LIB})"
+                            ici --cmd "MOVOBJ OBJ(${BUILD_LIB}/*ALL) OBJTYPE(*ALL) TOLIB(${DEPLOY_LIB})"
                         """
                     }
                 }
