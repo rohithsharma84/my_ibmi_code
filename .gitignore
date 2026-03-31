@@ -1,3 +1,6 @@
 images/*
 assets/*
 .backup/*
+.logs
+.evfevent
+.env

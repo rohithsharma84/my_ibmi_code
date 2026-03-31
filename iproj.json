@@ -1,0 +1,10 @@
+{
+    "description": "My IBM i CI/CD experiments",
+    "objlib": "RSHARMA1",
+    "curlib": "RSHARMA1",
+    "preAllRules": "CHGLIBL LIBL(RSHARMA1) CURLIB(RSHARMA1)",
+    "includePaths": [
+      "qrpglesrc",
+      "qclsrc"
+    ]
+}
