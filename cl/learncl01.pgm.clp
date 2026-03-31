@@ -6,7 +6,7 @@
 
 START:      PGM PARM(&NAME)
 
-            DCL &NAME *CHAR LEN(20)
+            DCL &NAME *CHAR LEN(10)
             DCL &MSG *CHAR LEN(80)
 
         /* Send a message to the pgm msg queue */
