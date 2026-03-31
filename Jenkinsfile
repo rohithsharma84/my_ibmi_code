@@ -34,7 +34,7 @@ pipeline {
                             # We add a mkdir -p to ensure the path exists on pub400
                             ici --rcwd ${REMOTE_PATH} \
                                 --push . \
-                                --cmd "mkdir -p ${REMOTE_PATH} && /QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
+                                --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
                         """
                     }
                 }
