@@ -23,20 +23,24 @@ pipeline {
                 nodejs('NodeJS_25') { 
                     withCredentials([usernamePassword(credentialsId: 'pub400-auth', passwordVariable: 'IBMI_PASSWORD', usernameVariable: 'IBMI_USER')]) {
                         sh """
-                            # 1. Ensure tools are available
                             npm install -g @ibm/sourceorbit @ibm/ibmi-ci
                             
-                            # 2. What does Source Orbit see?
-                            so -i
-
-                            # 3. Generate the Makefile 
+                            echo "--- Debug: Workspace Files ---"
+                            find . -maxdepth 2 -not -path '*/.*'
+                            
+                            echo "--- Debug: Source Orbit Info ---"
+                            # Adding -p tells SO to print the project structure it detected
+                            so -i -p
+                            
+                            echo "--- Generating Makefile ---"
                             so -m
+                            
+                            if [ ! -f Makefile ]; then
+                                echo "CRITICAL: Makefile was not created. Source Orbit found no targets."
+                                exit 1
+                            fi
 
-                            # 4. Corrected ici command order:
-                            # We add a mkdir -p to ensure the path exists on pub400
-                            ici --rcwd ${REMOTE_PATH} \
-                                --push . \
-                                --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
+                            ici --rcwd ${REMOTE_PATH} --push . --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
                         """
                     }
                 }
