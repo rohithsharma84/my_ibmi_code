@@ -29,10 +29,8 @@ pipeline {
                             # 2. Generate the Makefile 
                             # Use 'ls' after to verify it exists in the Jenkins workspace
                             so -m
-                            ls -p | grep Makefile
 
                             # 3. Corrected ici command order:
-                            # We move --rcwd BEFORE --push
                             # We add a mkdir -p to ensure the path exists on pub400
                             ici --rcwd ${REMOTE_PATH} \
                                 --push . \
