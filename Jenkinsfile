@@ -23,18 +23,20 @@ pipeline {
                 nodejs('NodeJS_25') { 
                     withCredentials([usernamePassword(credentialsId: 'pub400-auth', passwordVariable: 'IBMI_PASSWORD', usernameVariable: 'IBMI_USER')]) {
                         sh """
-                            # 1. Ensure tools are available in this node session
+                            # 1. Ensure tools are available
                             npm install -g @ibm/sourceorbit @ibm/ibmi-ci
                             
-                            # 2. Generate the Makefile locally using Source Orbit
-                            # This maps dependencies across your QRPGLESRC, QCLSRC, etc.
+                            # 2. Generate the Makefile 
+                            # Use 'ls' after to verify it exists in the Jenkins workspace
                             so -m
-                            
-                            # 3. Push workspace (source + Makefile) to IFS and compile
-                            # We use gmake on pub400 to execute the build into RSHARMA1
-                            ici --push . \
-                                --rcwd ${REMOTE_PATH} \
-                                --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
+                            ls -p | grep Makefile
+
+                            # 3. Corrected ici command order:
+                            # We move --rcwd BEFORE --push
+                            # We add a mkdir -p to ensure the path exists on pub400
+                            ici --rcwd ${REMOTE_PATH} \
+                                --push . \
+                                --cmd "mkdir -p ${REMOTE_PATH} && /QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
                         """
                     }
                 }
