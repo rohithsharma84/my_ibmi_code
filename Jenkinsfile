@@ -26,11 +26,13 @@ pipeline {
                             # 1. Ensure tools are available
                             npm install -g @ibm/sourceorbit @ibm/ibmi-ci
                             
-                            # 2. Generate the Makefile 
-                            # Use 'ls' after to verify it exists in the Jenkins workspace
+                            # 2. What does Source Orbit see?
+                            so -i
+
+                            # 3. Generate the Makefile 
                             so -m
 
-                            # 3. Corrected ici command order:
+                            # 4. Corrected ici command order:
                             # We add a mkdir -p to ensure the path exists on pub400
                             ici --rcwd ${REMOTE_PATH} \
                                 --push . \
