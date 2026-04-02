@@ -29,8 +29,8 @@ pipeline {
                             so -bf make --verbose
                             
                             ici \
-                                --cmd "mkdir -p './builds/ics_${GITHUB_HEAD_REF}'" \
-                                --rcwd "./builds/ics_${GITHUB_HEAD_REF}" \
+                                --cmd "mkdir -p '${REMOTE_PATH}/${env.BRANCH_NAME}'" \
+                                --rcwd "${REMOTE_PATH}/${env.BRANCH_NAME}" \
                                 --push "." \
                                 --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
                         """
