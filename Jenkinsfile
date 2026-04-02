@@ -25,22 +25,14 @@ pipeline {
                         sh """
                             npm install -g @ibm/sourceorbit @ibm/ibmi-ci
                             
-                            echo "--- Debug: Workspace Files ---"
-                            find . -maxdepth 2 -not -path '*/.*'
+                            echo "--- Generating TOBI .mk file ---"
+                            so -bf make --verbose
                             
-                            echo "--- Debug: Source Orbit Info ---"
-                            # Adding -p tells SO to print the project structure it detected
-                            so -i -p
-                            
-                            echo "--- Generating Makefile ---"
-                            so -m
-                            
-                            if [ ! -f Makefile ]; then
-                                echo "CRITICAL: Makefile was not created. Source Orbit found no targets."
-                                exit 1
-                            fi
-
-                            ici --rcwd ${REMOTE_PATH} --push . --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
+                            ici \
+                                --cmd "mkdir -p './builds/ics_${GITHUB_HEAD_REF}'" \
+                                --rcwd "./builds/ics_${GITHUB_HEAD_REF}" \
+                                --push "." \
+                                --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
                         """
                     }
                 }
