@@ -8,6 +8,12 @@ START:      PGM PARM(&NAME)
 
             DCL VAR(&NAME) TYPE(*CHAR) LEN(10)
 
+        /* Check parameter count before touching parm storage */
+            IF COND(%PARMS *LT 1) THEN(DO)
+                CHGVAR &MSG VALUE('Input parm is required.')
+                SNDPGMMSG MSGDTA(&MSG) MSGID(CPF9898) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+            ENDDO
+
         /* Call LEARNCL01 with the parm */
             CALL PGM(LEARNCL01) PARM(&NAME)
             
