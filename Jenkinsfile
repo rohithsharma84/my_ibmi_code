@@ -23,21 +23,22 @@ pipeline {
                 script {
                     def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'main'
                     echo "Using branch: ${branchName}"
-                }
-                nodejs('NodeJS_25') { 
-                    withCredentials([usernamePassword(credentialsId: 'pub400-auth', passwordVariable: 'IBMI_PASSWORD', usernameVariable: 'IBMI_USER')]) {
-                        sh """
-                            npm install -g @ibm/sourceorbit @ibm/ibmi-ci
-                            
-                            echo "--- Generating makefile ---"
-                            so -bf make --verbose
-                            
-                            ici \
-                                --cmd "mkdir -p '${REMOTE_PATH}/${branchName}'" \
-                                --rcwd "${REMOTE_PATH}/${branchName}" \
-                                --push "." \
-                                --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
-                        """
+
+                    nodejs('NodeJS_25') {
+                        withCredentials([usernamePassword(credentialsId: 'pub400-auth', passwordVariable: 'IBMI_PASSWORD', usernameVariable: 'IBMI_USER')]) {
+                            sh """
+                                npm install -g @ibm/sourceorbit @ibm/ibmi-ci
+                                
+                                echo "--- Generating makefile ---"
+                                so -bf make --verbose
+                                
+                                ici \
+                                    --cmd "mkdir -p '${REMOTE_PATH}/${branchName}'" \
+                                    --rcwd "${REMOTE_PATH}/${branchName}" \
+                                    --push "." \
+                                    --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
+                            """
+                        }
                     }
                 }
             }
