@@ -29,7 +29,7 @@ pipeline {
                         sh """
                             npm install -g @ibm/sourceorbit @ibm/ibmi-ci
                             
-                            echo "--- Generating TOBI .mk file ---"
+                            echo "--- Generating makefile ---"
                             so -bf make --verbose
                             
                             ici \
@@ -43,28 +43,14 @@ pipeline {
             }
         }
 
-        stage('Deploy to Production') {
-            steps {
-                nodejs('NodeJS_25') {
-                    withCredentials([usernamePassword(credentialsId: 'pub400-auth', passwordVariable: 'IBMI_PASSWORD', usernameVariable: 'IBMI_USER')]) {
-                        echo "Promoting objects from ${BUILD_LIB} to ${DEPLOY_LIB}..."
-                        
-                        // Moves all successfully compiled objects to the production library
-                        sh """
-                            ici --cmd "MOVOBJ OBJ(${BUILD_LIB}/*ALL) OBJTYPE(*ALL) TOLIB(${DEPLOY_LIB})"
-                        """
-                    }
-                }
-            }
-        }
     }
 
     post {
         success {
-            echo 'Build and Deployment to RSHARMA2 successful.'
+            echo '--- Build successful ---'
         }
         failure {
-            echo 'Pipeline failed. Check the Jenkins console and pub400 job logs.'
+            echo 'Pipeline failed. Check the Jenkins console output for details.'
         }
         always {
             // Clean the Jenkins workspace to keep the agent tidy
