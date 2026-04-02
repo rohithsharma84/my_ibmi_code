@@ -20,6 +20,10 @@ pipeline {
         stage('Build & Sync') {
             steps {
                 // Uses the NodeJS installation defined in Jenkins Global Tool Configuration
+                script {
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'main'
+                    echo "Using branch: ${branchName}"
+                }
                 nodejs('NodeJS_25') { 
                     withCredentials([usernamePassword(credentialsId: 'pub400-auth', passwordVariable: 'IBMI_PASSWORD', usernameVariable: 'IBMI_USER')]) {
                         sh """
@@ -29,8 +33,8 @@ pipeline {
                             so -bf make --verbose
                             
                             ici \
-                                --cmd "mkdir -p '${REMOTE_PATH}/${env.BRANCH_NAME}'" \
-                                --rcwd "${REMOTE_PATH}/${env.BRANCH_NAME}" \
+                                --cmd "mkdir -p '${REMOTE_PATH}/${branchName}'" \
+                                --rcwd "${REMOTE_PATH}/${branchName}" \
                                 --push "." \
                                 --cmd "/QOpenSys/pkgs/bin/gmake BIN_LIB=${BUILD_LIB}"
                         """
