@@ -7,7 +7,8 @@
 
 START:      PGM PARM(&NAME)
 
-            DCL VAR(&NAME) TYPE(*CHAR) LEN(10)
+            DCL &NAME *CHAR LEN(10)
+            DCL &MSG *CHAR LEN(80)
 
         /* Check parameter count before touching parm storage */
             IF COND(%PARMS *LT 1) THEN(DO)
