@@ -7,6 +7,7 @@ pipeline {
         BUILD_LIB   = 'RSHARMA1'
         DEPLOY_LIB  = 'RSHARMA2'
         REMOTE_PATH = '/home/RSHARMA/builds/my_ibmi_code'
+        NPM_CONFIG_STRICT_SSL = 'false' //Needed due to self signed cert errors
     }
 
     stages {
